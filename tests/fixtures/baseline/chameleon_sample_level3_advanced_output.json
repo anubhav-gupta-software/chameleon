@@ -40,8 +40,8 @@
     {
       "id": "headline",
       "type": "text",
-      "x": 83.018752,
-      "y": 3.2543999999999995,
+      "x": 76.0,
+      "y": 8.0,
       "width": 518.8672,
       "height": 23.728,
       "z_index": 5,
@@ -226,9 +226,9 @@
     {
       "id": "legal_text",
       "type": "text",
-      "x": 0.0,
+      "x": 4.0,
       "y": 36.0,
-      "width": 68.0,
+      "width": 64.0,
       "height": 46.87199999999999,
       "z_index": 6,
       "content": "Please drink responsibly. Botanical Sparkling Co., 2026. Void where prohibited. See solstice.com/terms for full details.",

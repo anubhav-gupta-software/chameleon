@@ -210,8 +210,10 @@ def _avoid_busy_background(
                 nx_values = [x]
             else:
                 nx_values = []
-                nx = 0.0
-                while nx + w <= tw:
+                pad = _edge_pad(tw, th)
+                nx = pad if w + 2 * pad <= tw else 0.0
+                x_limit = tw - w - pad if w + 2 * pad <= tw else tw - w
+                while nx <= x_limit:
                     nx_values.append(nx)
                     nx += step
             for nx in nx_values:
