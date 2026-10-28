@@ -2,6 +2,19 @@
 
 CHAMELEON reads a design JSON file and a target canvas, returns the same elements with adjusted geometry and optional text font sizes, and renders a PNG. Stage one runs offline in a container. Copy, font family, brand colors, logo, and asset pixels stay as supplied. The engine rearranges elements. It does not stretch the whole poster and it does not regenerate assets.
 
+## Approach
+
+`resize()` is a deterministic reflow engine, not a scale/stretch transform. No model is required; an optional text-context model (see Model, below) can replace the geometric role guess and importance numbers, but font fitting, placement, and collision cleanup stay the same either way.
+
+1. **Role classification.** Each element is tagged from its geometry, type, z-index, and `group_id` alone — never its id or content — as a full-bleed background, logo, hero image, headline, body text, legal/fine print, a pill group (CTA or badge), a decorative shape, or a rotated ribbon accent. This is what lets the same logic generalize to designs it has never seen.
+2. **Archetype candidates.** The target canvas's aspect ratio (and, for very short canvases, its absolute height) narrows the choice to one of three layout templates: a vertical stack (portrait/near-square), a two-column layout (wide banners/posters), or a single-row layout (ultra-thin strips, e.g. a 728×90 leaderboard).
+3. **Importance scoring.** Each classified item gets a continuous 0–1 score from its role plus its own font size/area relative to the rest of *this* design — an unusually large badge or an already-dominant headline earns more room than its role alone would give it.
+4. **Space allocation and placement.** Each archetype allocates space by importance weight, then places each element (a group moves as one rigid unit, so a button's background and label never drift apart). Images are aspect-preserving contain-fit (except `fit:cover`, which crops by design); text's `font_size` is shrunk or grown to fit using the real renderer's own font metrics, floored at an importance-scaled minimum so a headline never shrinks as far as fine print.
+5. **Decorative passthrough.** Ungrouped shapes and rotated accent groups are scaled proportionally instead of forced into the flow — they're meant to bleed or overlap by design.
+6. **Candidate scoring.** Every candidate from step 2 is built in full and scored on unwanted collisions (weighted by importance, extra-penalized for text sitting on an image), compressed/illegible text, and anything left off-canvas; the lowest-cost candidate wins.
+7. **Collision resolution.** The winning candidate gets a cleanup pass that pushes apart any two message-bearing units still overlapping, splitting the separation in inverse proportion to importance.
+8. **Clamp and snap.** A final pass keeps everything but an already-intentionally-bleeding decorative element on-canvas, then snaps every element's position (never its size) to a small pixel grid.
+
 ## Setup
 
 Python 3.10–3.12. From a checkout:
