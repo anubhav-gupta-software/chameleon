@@ -50,18 +50,23 @@ The provisional weight used for local checks is Llama 3.2 3B, Q4_K_M, Llama 3.2 
 Build with Buildx and select `linux/amd64` on the command. The Dockerfile does not pin a platform: the legacy `docker build --platform` flag does not select the base image, and a `FROM --platform` pin fails when the local `python:3.11-slim` tag is only arm64.
 
 ```bash
-python3 scripts/check_packaged_model.py \
-  --expected-sha256 dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff
 docker buildx build --platform linux/amd64 --load -t my-chameleon-engine .
 docker run --rm --network none \
-  -e CHAMELEON_TEXT_MODE=on \
-  -e CHAMELEON_TEXT_NO_CACHE=1 \
   -v "$(pwd)/input:/app/input" \
   -v "$(pwd)/output:/app/output" \
   my-chameleon-engine
 ```
 
-Confirm each sidecar says `model` and `model_judgment` is true. These checks are local. They are not Adobe's hidden score.
+This submission does not package a `.gguf` (see Model, above — none is Adobe-approved yet), so it runs the no-model path by default (`CHAMELEON_TEXT_MODE` defaults to `auto`, which falls back cleanly when no model file is present). **Do not set `CHAMELEON_TEXT_MODE=on`** without a packaged model — `on` requires a successful model judgment and exits 2, writing nothing, if `models/` has no `.gguf`.
+
+If you do package a `.gguf` and want to confirm it's actually being used, first verify the file:
+
+```bash
+python3 scripts/check_packaged_model.py \
+  --expected-sha256 dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff
+```
+
+then add `-e CHAMELEON_TEXT_MODE=on -e CHAMELEON_TEXT_NO_CACHE=1` to the `docker run` command above and confirm each sidecar says `model` and `model_judgment` is true. These checks are local. They are not Adobe's hidden score.
 
 The linux/amd64 image `chameleon-quality-amd64:center-2026-10-26` (created 2026-10-26) is an older build from prompt `text-context-p4`. It does not contain the current logo placement or the offer move. A container run of this tree still has to be built from the current source.
 
